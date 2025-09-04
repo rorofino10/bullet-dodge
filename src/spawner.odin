@@ -1,52 +1,39 @@
 #+feature dynamic-literals
 package main
 
+import "core:fmt"
 import rl "vendor:raylib"
 
-bullet_string_type := map[string]EntityType {
-	"bouncer"     = .BulletBouncer,
-	"constructor" = .BulletConstructor,
-	"bulldozer"   = .BulletBulldozer,
-}
-
-spawn_spawner :: proc(pos: rl.Vector2, type: string) {
+spawn_spawner :: proc(pos: Vec2, type: EntityType) {
 	append(
 		&state.bullet_spawners,
-		BulletSpawner {
-			x = i32(pos.x),
-			y = i32(pos.y),
-			velocity = 100,
-			bullet_type = type,
-			spawn_frequency = 1,
-		},
+		BulletSpawner{pos = pos, velocity = 100, bullet_type = type, spawn_frequency = 1},
 	)
 }
 
-spawn_wall_from_impact :: proc(dir: rl.Vector2, pos: rl.Vector2) {
-	perp := rl.Vector2{-dir.y, dir.x}
+spawn_wall_from_impact :: proc(dir: Vec2, pos: Vec2) {
+	perp := Vec2{-dir.y, dir.x}
 	p1 := pos + perp * 150
 	p2 := pos - perp * 150
 	new_wall := Wall {
-		x1 = i32(p1.x),
-		x2 = i32(p2.x),
-		y1 = i32(p1.y),
-		y2 = i32(p2.y),
+		p1 = p1,
+		p2 = p2,
 	}
 	append(&state.walls, new_wall)
 }
 
 spawn_bullet_from :: proc(spawner: BulletSpawner) {
-	bullet_dir := rl.Vector2Normalize(
-		state.player.position - rl.Vector2{f32(spawner.x), f32(spawner.y)},
-	)
+	bullet_dir := vec_normalize(state.player.position - spawner.pos)
+	fmt.println(state.player.position)
+	fmt.println(spawner.pos)
 	append(
 		&state.entities,
 		Entity {
-			position = rl.Vector2{f32(spawner.x), f32(spawner.y)},
+			position = spawner.pos,
 			direction = bullet_dir,
 			speed = spawner.velocity,
 			size = 10,
-			type = bullet_string_type[spawner.bullet_type],
+			type = spawner.bullet_type,
 		},
 	)
 }

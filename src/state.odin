@@ -35,8 +35,8 @@ EntityType :: enum {
 }
 
 Entity :: struct {
-	position:      raylib.Vector2,
-	direction:     raylib.Vector2,
+	position:      Vec2,
+	direction:     Vec2,
 	speed:         u32,
 	size:          f32,
 	type:          EntityType,
@@ -44,31 +44,28 @@ Entity :: struct {
 }
 
 Wall :: struct {
-	x1:            i32 `json:x1`,
-	x2:            i32 `json:x2`,
-	y1:            i32 `json:y1`,
-	y2:            i32 `json:y2`,
-	invulnerable:  bool `json:invulnerable`,
+	p1:            Vec2,
+	p2:            Vec2,
+	invulnerable:  bool,
 	should_remove: bool,
 }
 
 
 BulletSpawner :: struct {
-	x:               i32 `json:x`,
-	y:               i32 `json:y`,
-	spawn_frequency: f32 `json:spawn_frequency`,
-	velocity:        u32 `json:velocity`,
-	bullet_type:     string `json:bullet_type`,
+	pos:             Vec2,
+	spawn_frequency: f32,
+	velocity:        u32,
+	bullet_type:     EntityType,
 	last_spawn:      f32,
 }
 
+
 MapState :: struct {
-	map_width:       i32 `json:"map_width"`,
-	map_height:      i32 `json:"map_height`,
-	wall_thickness:  u32 `json:"wall_thickness"`,
-	player_speed:    u32 `json:"player_speed"`,
-	walls:           [dynamic]Wall `json:walls`,
-	bullet_spawners: [dynamic]BulletSpawner `json:bullet_spawners`,
+	map_size:        Vec2i,
+	wall_thickness:  u32,
+	player_speed:    u32,
+	walls:           [dynamic]Wall,
+	bullet_spawners: [dynamic]BulletSpawner,
 	entities:        [dynamic]Entity,
 	player:          Entity,
 	time_survived:   f32,
@@ -146,22 +143,18 @@ load_state_from_json :: proc() -> Error {
 	json_from_file := get_json_from_file(
 		map_selector.maps_filenames[map_selector.selected_map],
 	) or_return
-
+	state.entities = make([dynamic]Entity, state_alloc)
 	json.unmarshal(json_from_file, &state.mapState, allocator = state_alloc) or_return
-	state.player = Entity {
-		position  = raylib.Vector2(0),
-		direction = raylib.Vector2(0),
-		speed     = state.player_speed,
-		size      = 20,
-		type      = .Player,
-	}
+
+	state.player.speed = state.player_speed
+	state.player.size = 20
+	state.player.type = .Player
 	camera = raylib.Camera2D {
 		offset   = raylib.Vector2{screen_size.x / 2, screen_size.y / 2},
-		zoom     = screen_size.x / f32(state.map_width) - 0.1,
-		target   = raylib.Vector2(0),
+		zoom     = screen_size.x / f32(state.map_size.x) - 0.1,
+		target   = Vec2(0),
 		rotation = 0,
 	}
-
 	return nil
 }
 

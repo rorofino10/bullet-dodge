@@ -22,13 +22,50 @@ main :: proc() {
 		mem.tracking_allocator_destroy(&track)
 	}
 
-	rl.InitWindow(i32(screen_size.x), i32(screen_size.y), "Game Title")
-	rl.InitAudioDevice()
-	rl.SetTargetFPS(60)
-	rl.GuiLoadStyle("styles/style_cherry.rgs")
-	run()
-	rl.CloseAudioDevice()
-	rl.CloseWindow()
+	{ 	// Init Raylib
+		rl.InitWindow(i32(screen_size.x), i32(screen_size.y), "Game Title")
+		rl.InitAudioDevice()
+		rl.SetTargetFPS(60)
+		rl.GuiLoadStyle("styles/style_cherry.rgs")
+	}
 
-	// write_state_to_file()
+	{ 	// Init Allocators
+		init_state_alloc()
+		init_map_selector_alloc()
+	}
+
+	{ 	// Load State
+		load_map_selector()
+		load_state_from_json()
+	}
+
+
+	for !rl.WindowShouldClose() {
+		free_all(context.temp_allocator)
+
+		switch state.game_loop_state {
+		case .PLAYING:
+			input()
+			update()
+			render_playing()
+		case .LOST:
+			render_lost()
+		}
+
+	}
+
+	{ 	// Save Game
+		save_err := write_state_to_file()
+		if save_err != nil {
+			fmt.println(save_err)
+		}
+	}
+
+	{ 	// Cleanup
+		delete(state_buffer)
+		delete(map_selector_buffer)
+		rl.CloseAudioDevice()
+		rl.CloseWindow()
+	}
+
 }

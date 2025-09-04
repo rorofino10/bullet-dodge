@@ -7,9 +7,45 @@ import "core:path/filepath"
 import "core:strings"
 import rl "vendor:raylib"
 
-HUDItem :: struct {
-	unformatted_string: cstring,
+
+draw_line_vec2i :: proc(startPos, endPos: Vec2i, color: rl.Color) {
+	rl.DrawLineV(vec2i_to_vec2(startPos), vec2i_to_vec2(endPos), color)
 }
+
+
+draw_line_vec :: proc {
+	rl.DrawLineV,
+	draw_line_vec2i,
+}
+
+draw_line_ex_vec2i :: proc(startPos, endPos: Vec2i, thick: f32, color: rl.Color) {
+	rl.DrawLineEx(vec2i_to_vec2(startPos), vec2i_to_vec2(endPos), thick, color)
+}
+draw_line_exi_vec2i :: proc(startPos, endPos: Vec2i, thick: u32, color: rl.Color) {
+	rl.DrawLineEx(vec2i_to_vec2(startPos), vec2i_to_vec2(endPos), f32(thick), color)
+}
+draw_line_exi_vec2 :: proc(startPos, endPos: Vec2, thick: u32, color: rl.Color) {
+	rl.DrawLineEx(startPos, endPos, f32(thick), color)
+}
+
+
+draw_line_ex_vec :: proc {
+	rl.DrawLineEx,
+	draw_line_ex_vec2i,
+	draw_line_exi_vec2i,
+	draw_line_exi_vec2,
+}
+
+draw_circle_vec2i :: proc(center: Vec2i, radius: f32, color: rl.Color) {
+	rl.DrawCircleV(vec2i_to_vec2(center), radius, color)
+}
+
+draw_circle :: proc {
+	rl.DrawCircle,
+	rl.DrawCircleV,
+	draw_circle_vec2i,
+}
+
 HUD :: struct {
 	x_offset:  i32,
 	y_offset:  i32,
@@ -44,101 +80,6 @@ draw_dropdown :: proc() {
 	}
 }
 
-draw_hud :: proc() {
-
-	// ctprint for cstrings and temp_allocator
-	hud := new(HUD, context.temp_allocator)
-	hud.text_size = 20
-	hud.margin = 2
-	frame_time_text := fmt.ctprintf("frame_time: %.1fms", rl.GetFrameTime() * 1000)
-	rl.DrawText(frame_time_text, hud.x_offset, hud.y_offset, hud.text_size, rl.SKYBLUE)
-	hud.y_offset += hud.text_size + hud.margin
-
-	num_bullets_text := fmt.ctprintf("num_bullets: %d", len(state.entities) - 1)
-	rl.DrawText(num_bullets_text, hud.x_offset, hud.y_offset, hud.text_size, rl.SKYBLUE)
-	hud.y_offset += hud.text_size + hud.margin
-
-	num_walls_text := fmt.ctprintf("num_walls: %d", len(state.walls))
-	rl.DrawText(num_walls_text, hud.x_offset, hud.y_offset, hud.text_size, rl.SKYBLUE)
-	hud.y_offset += hud.text_size + hud.margin
-
-	fps_text := fmt.ctprintf("fps: %d", rl.GetFPS())
-	rl.DrawText(fps_text, hud.x_offset, hud.y_offset, hud.text_size, rl.SKYBLUE)
-	hud.y_offset += hud.text_size + hud.margin
-
-	time_survived_text := fmt.ctprintf("time_survived: %.2fs", state.time_survived)
-	rl.DrawText(time_survived_text, hud.x_offset, hud.y_offset, hud.text_size, rl.SKYBLUE)
-}
-
-draw_map_border :: proc() {
-	rl.DrawLine(
-		-state.map_width / 2,
-		state.map_height / 2,
-		-state.map_width / 2,
-		-state.map_height / 2,
-		rl.WHITE,
-	)
-	rl.DrawLine(
-		-state.map_width / 2,
-		state.map_height / 2,
-		state.map_width / 2,
-		state.map_height / 2,
-		rl.WHITE,
-	)
-	rl.DrawLine(
-		state.map_width / 2,
-		state.map_height / 2,
-		state.map_width / 2,
-		-state.map_height / 2,
-		rl.WHITE,
-	)
-	rl.DrawLine(
-		-state.map_width / 2,
-		-state.map_height / 2,
-		state.map_width / 2,
-		-state.map_height / 2,
-		rl.WHITE,
-	)
-}
-
-draw_player :: proc() {
-	rl.DrawCircleV(state.player.position, state.player.size, entity_type_color[state.player.type])
-}
-
-draw_entities :: proc() {
-
-	for entity in state.entities {
-		rl.DrawCircleV(entity.position, entity.size, entity_type_color[entity.type])
-	}
-
-
-}
-draw_spawners :: proc() {
-	for spawner in state.bullet_spawners {
-		rl.DrawCircle(
-			spawner.x,
-			spawner.y,
-			10,
-			entity_type_color[bullet_string_type[spawner.bullet_type]],
-		)
-	}
-}
-
-draw_walls :: proc() {
-	for wall in state.walls {
-		startPos := rl.Vector2{f32(wall.x1), f32(wall.y1)}
-		endPos := rl.Vector2{f32(wall.x2), f32(wall.y2)}
-		// rl.DrawCircleV(points[0], 10, rl.RED)
-		// rl.DrawCircleV(points[1], 10, rl.BLUE)
-		// rl.DrawCircleV(points[2], 10, rl.WHITE)
-		// rl.DrawCircleV(points[3], 10, rl.GREEN)
-		rl.DrawLineEx(startPos, endPos, f32(state.wall_thickness), rl.RED)
-		// rl.DrawLineV(startPos, endPos, rl.RED)
-	}
-
-
-}
-
 render_playing :: proc() {
 	rl.BeginDrawing()
 	rl.ClearBackground(rl.BLACK)
@@ -146,15 +87,74 @@ render_playing :: proc() {
 
 	rl.BeginMode2D(camera)
 
-	draw_player()
-	draw_entities()
-	draw_spawners()
-	draw_walls()
-	draw_map_border()
+	// player
+	draw_circle(state.player.position, state.player.size, entity_type_color[state.player.type])
+
+	// entities
+	for entity in state.entities {
+		draw_circle(entity.position, entity.size, entity_type_color[entity.type])
+	}
+
+	//spawners
+	for spawner in state.bullet_spawners {
+		draw_circle(spawner.pos, 10, entity_type_color[spawner.bullet_type])
+	}
+
+	//walls
+	for wall in state.walls {
+		draw_line_ex_vec(wall.p1, wall.p2, state.wall_thickness, rl.RED)
+	}
+
+	// map_border
+	{
+		startPos: Vec2i
+		endPos: Vec2i
+		startPos = Vec2i{-state.map_size.x / 2, state.map_size.y / 2}
+		endPos = Vec2i{-state.map_size.x / 2, -state.map_size.y / 2}
+		draw_line_vec(startPos, endPos, rl.WHITE)
+
+		startPos = Vec2i{-state.map_size.x / 2, state.map_size.y / 2}
+		endPos = Vec2i{state.map_size.x / 2, state.map_size.y / 2}
+		draw_line_vec(startPos, endPos, rl.WHITE)
+
+		startPos = Vec2i{state.map_size.x / 2, state.map_size.y / 2}
+		endPos = Vec2i{state.map_size.x / 2, -state.map_size.y / 2}
+		draw_line_vec(startPos, endPos, rl.WHITE)
+
+		startPos = Vec2i{-state.map_size.x / 2, -state.map_size.y / 2}
+		endPos = Vec2i{state.map_size.x / 2, -state.map_size.y / 2}
+		draw_line_vec(startPos, endPos, rl.WHITE)
+	}
 
 	rl.EndMode2D()
 
-	draw_hud()
+
+	// hud
+	{
+
+		// ctprint for cstrings and temp_allocator
+		hud := new(HUD, context.temp_allocator)
+		hud.text_size = 20
+		hud.margin = 2
+		frame_time_text := fmt.ctprintf("frame_time: %.1fms", rl.GetFrameTime() * 1000)
+		rl.DrawText(frame_time_text, hud.x_offset, hud.y_offset, hud.text_size, rl.SKYBLUE)
+		hud.y_offset += hud.text_size + hud.margin
+
+		num_bullets_text := fmt.ctprintf("num_bullets: %d", len(state.entities))
+		rl.DrawText(num_bullets_text, hud.x_offset, hud.y_offset, hud.text_size, rl.SKYBLUE)
+		hud.y_offset += hud.text_size + hud.margin
+
+		num_walls_text := fmt.ctprintf("num_walls: %d", len(state.walls))
+		rl.DrawText(num_walls_text, hud.x_offset, hud.y_offset, hud.text_size, rl.SKYBLUE)
+		hud.y_offset += hud.text_size + hud.margin
+
+		fps_text := fmt.ctprintf("fps: %d", rl.GetFPS())
+		rl.DrawText(fps_text, hud.x_offset, hud.y_offset, hud.text_size, rl.SKYBLUE)
+		hud.y_offset += hud.text_size + hud.margin
+
+		time_survived_text := fmt.ctprintf("time_survived: %.2fs", state.time_survived)
+		rl.DrawText(time_survived_text, hud.x_offset, hud.y_offset, hud.text_size, rl.SKYBLUE)
+	}
 	draw_dropdown()
 	rl.EndDrawing()
 
