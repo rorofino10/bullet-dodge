@@ -1,0 +1,10 @@
+{
+  "map_width": 200,
+  "map_height": 200,
+  "wall_thickness": 50,
+  "player_speed": 100,
+  "walls": [
+    { "x1": -50, "y1": -100, "x2": -50, "y2": 100, "invulnerable": true }
+  ],
+  "bullet_spawners": []
+}
