@@ -8,15 +8,10 @@ import "core:strings"
 import rl "vendor:raylib"
 
 
-draw_line_exi :: proc(startPos, endPos: Vec2, thick: u32, color: rl.Color) {
-	rl.DrawLineEx(startPos, endPos, f32(thick), color)
-}
-
 draw_line :: proc {
 	rl.DrawLineEx,
 	rl.DrawLine,
 	rl.DrawLineV,
-	draw_line_exi,
 }
 
 draw_circle :: proc {
@@ -81,6 +76,12 @@ render_playing :: proc() {
 	//walls
 	for wall in state.walls {
 		draw_line(wall.p1, wall.p2, state.wall_thickness, rl.RED)
+
+		wall_mid := (wall.p1 + wall.p2) / 2
+		wall_normal := wall_normal(wall.p1, wall.p2)
+		// wall_perp := Vec2{wall_dir.y, -wall_dir.x}
+		draw_circle(wall_mid, 20, rl.WHITE)
+		draw_line(wall_mid, wall_mid + wall_normal * 30, 5, rl.WHITE)
 	}
 
 	// map_border

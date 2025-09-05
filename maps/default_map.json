@@ -1,8 +1,10 @@
 {
   "map_size": [1000, 1000],
   "wall_thickness": 20,
-  "player_speed": 250,
-  "player_size": 20,
+  "player": {
+    "speed": 250,
+    "size": 20
+  },
   "walls": [
     { "p1": [-500, -500], "p2": [-500, 500], "invulnerable": true },
     { "p1": [-500, -500], "p2": [500, -500], "invulnerable": true },
@@ -15,12 +17,6 @@
       "spawn_frequency": 2.0,
       "velocity": 200,
       "bullet_type": "BulletBouncer"
-    },
-    {
-      "pos": [300, 0],
-      "spawn_frequency": 5.0,
-      "velocity": 150,
-      "bullet_type": "BulletConstructor"
     }
   ]
 }

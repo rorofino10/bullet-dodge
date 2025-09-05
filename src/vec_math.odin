@@ -24,3 +24,8 @@ vec_normalize :: proc {
 	vec2_normalize,
 	vec2i_normalize,
 }
+
+wall_normal :: proc(vec1, vec2: Vec2) -> Vec2 {
+	dir := vec2_normalize(vec1 - vec2)
+	return Vec2{dir.y, -dir.x}
+}

@@ -37,7 +37,7 @@ EntityType :: enum {
 Entity :: struct {
 	position:      Vec2,
 	direction:     Vec2,
-	speed:         u32,
+	speed:         f32,
 	size:          f32,
 	type:          EntityType,
 	should_remove: bool,
@@ -54,7 +54,7 @@ Wall :: struct {
 BulletSpawner :: struct {
 	pos:             Vec2,
 	spawn_frequency: f32,
-	velocity:        u32,
+	velocity:        f32,
 	bullet_type:     EntityType,
 	last_spawn:      f32,
 }
@@ -62,8 +62,7 @@ BulletSpawner :: struct {
 
 MapState :: struct {
 	map_size:        Vec2,
-	wall_thickness:  u32,
-	player_speed:    u32,
+	wall_thickness:  f32,
 	walls:           [dynamic]Wall,
 	bullet_spawners: [dynamic]BulletSpawner,
 	entities:        [dynamic]Entity,
@@ -146,12 +145,10 @@ load_state_from_json :: proc() -> Error {
 	state.entities = make([dynamic]Entity, state_alloc)
 	json.unmarshal(json_from_file, &state.mapState, allocator = state_alloc) or_return
 
-	state.player.speed = state.player_speed
-	state.player.size = 20
 	state.player.type = .Player
 	camera = raylib.Camera2D {
 		offset = raylib.Vector2{screen_size.x / 2, screen_size.y / 2},
-		zoom   = screen_size.x / f32(state.map_size.x) - 0.1,
+		zoom   = screen_size.x / state.map_size.x - 0.1,
 	}
 	return nil
 }

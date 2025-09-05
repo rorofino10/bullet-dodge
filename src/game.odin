@@ -1,6 +1,7 @@
 package main
 
 import "core:fmt"
+import "core:math/linalg"
 import "core:mem"
 import "core:path/filepath"
 import rl "vendor:raylib"
@@ -18,18 +19,17 @@ check_collisions :: proc {
 }
 
 get_points_from_wall :: proc(wall: Wall) -> (res: [4]Vec2) {
-	wall_dir := vec_normalize(wall.p1 - wall.p2)
-	wall_perp := Vec2{wall_dir.y, -wall_dir.x}
-	thickness := f32(state.wall_thickness)
-	res[0] = wall.p1 - wall_perp * thickness / 2
-	res[1] = wall.p1 + wall_perp * thickness / 2
-	res[2] = wall.p2 + wall_perp * thickness / 2
-	res[3] = wall.p2 - wall_perp * thickness / 2
+	wall_normal := wall_normal(wall.p1, wall.p2)
+	thickness := state.wall_thickness
+	res[0] = wall.p1 - wall_normal * thickness / 2
+	res[1] = wall.p1 + wall_normal * thickness / 2
+	res[2] = wall.p2 + wall_normal * thickness / 2
+	res[3] = wall.p2 - wall_normal * thickness / 2
 	return res
 }
 
 input :: proc() {
-	direction_mul := f32(0)
+	direction_mul: f32
 	if rl.IsKeyDown(rl.KeyboardKey.S) {
 		direction_mul -= 1
 	}
@@ -75,21 +75,20 @@ update :: proc() {
 	state.time_survived += rl.GetFrameTime()
 	{ 	// Update Player
 		newPos :=
-			state.player.position +
-			state.player.direction * f32(state.player.speed) * rl.GetFrameTime()
+			state.player.position + state.player.direction * state.player.speed * rl.GetFrameTime()
 
 		wall, collided_with_wall := check_wall_collisions(state.player, newPos)
 		if !collided_with_wall {state.player.position = newPos}
 	}
 	for &entity in state.entities {
-		newPos := entity.position + entity.direction * f32(entity.speed) * rl.GetFrameTime()
+		newPos := entity.position + entity.direction * entity.speed * rl.GetFrameTime()
 		wall, collided_with_wall := check_wall_collisions(entity, newPos)
 		if collided_with_wall {
 			switch entity.type {
 			case .BulletBouncer:
 				entity.position = newPos
-				fmt.println("Bounce", entity.direction)
-				entity.direction = Vec2{entity.direction.y, -entity.direction.x}
+
+				entity.direction = linalg.reflect(entity.direction, wall_normal(wall.p1, wall.p2))
 
 			case .BulletConstructor:
 				spawn_wall_from_impact(entity.direction, entity.position)
@@ -109,10 +108,10 @@ update :: proc() {
 		if !check_collisions(
 			entity.position,
 			rl.Rectangle {
-				x = f32(-state.map_size.x / 2),
-				y = f32(-state.map_size.y / 2),
-				width = f32(state.map_size.x),
-				height = f32(state.map_size.y),
+				x = -state.map_size.x / 2,
+				y = -state.map_size.y / 2,
+				width = state.map_size.x,
+				height = state.map_size.y,
 			},
 		) {
 			entity.should_remove = true
