@@ -61,7 +61,7 @@ BulletSpawner :: struct {
 
 
 MapState :: struct {
-	map_size:        Vec2i,
+	map_size:        Vec2,
 	wall_thickness:  u32,
 	player_speed:    u32,
 	walls:           [dynamic]Wall,
@@ -150,10 +150,8 @@ load_state_from_json :: proc() -> Error {
 	state.player.size = 20
 	state.player.type = .Player
 	camera = raylib.Camera2D {
-		offset   = raylib.Vector2{screen_size.x / 2, screen_size.y / 2},
-		zoom     = screen_size.x / f32(state.map_size.x) - 0.1,
-		target   = Vec2(0),
-		rotation = 0,
+		offset = raylib.Vector2{screen_size.x / 2, screen_size.y / 2},
+		zoom   = screen_size.x / f32(state.map_size.x) - 0.1,
 	}
 	return nil
 }

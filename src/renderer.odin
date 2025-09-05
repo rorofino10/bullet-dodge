@@ -8,47 +8,25 @@ import "core:strings"
 import rl "vendor:raylib"
 
 
-draw_line_vec2i :: proc(startPos, endPos: Vec2i, color: rl.Color) {
-	rl.DrawLineV(vec2i_to_vec2(startPos), vec2i_to_vec2(endPos), color)
-}
-
-
-draw_line_vec :: proc {
-	rl.DrawLineV,
-	draw_line_vec2i,
-}
-
-draw_line_ex_vec2i :: proc(startPos, endPos: Vec2i, thick: f32, color: rl.Color) {
-	rl.DrawLineEx(vec2i_to_vec2(startPos), vec2i_to_vec2(endPos), thick, color)
-}
-draw_line_exi_vec2i :: proc(startPos, endPos: Vec2i, thick: u32, color: rl.Color) {
-	rl.DrawLineEx(vec2i_to_vec2(startPos), vec2i_to_vec2(endPos), f32(thick), color)
-}
-draw_line_exi_vec2 :: proc(startPos, endPos: Vec2, thick: u32, color: rl.Color) {
+draw_line_exi :: proc(startPos, endPos: Vec2, thick: u32, color: rl.Color) {
 	rl.DrawLineEx(startPos, endPos, f32(thick), color)
 }
 
-
-draw_line_ex_vec :: proc {
+draw_line :: proc {
 	rl.DrawLineEx,
-	draw_line_ex_vec2i,
-	draw_line_exi_vec2i,
-	draw_line_exi_vec2,
-}
-
-draw_circle_vec2i :: proc(center: Vec2i, radius: f32, color: rl.Color) {
-	rl.DrawCircleV(vec2i_to_vec2(center), radius, color)
+	rl.DrawLine,
+	rl.DrawLineV,
+	draw_line_exi,
 }
 
 draw_circle :: proc {
 	rl.DrawCircle,
 	rl.DrawCircleV,
-	draw_circle_vec2i,
+	rl.DrawCircle3D,
 }
 
 HUD :: struct {
-	x_offset:  i32,
-	y_offset:  i32,
+	offset:    Vec2i,
 	margin:    i32,
 	text_size: i32,
 }
@@ -102,28 +80,28 @@ render_playing :: proc() {
 
 	//walls
 	for wall in state.walls {
-		draw_line_ex_vec(wall.p1, wall.p2, state.wall_thickness, rl.RED)
+		draw_line(wall.p1, wall.p2, state.wall_thickness, rl.RED)
 	}
 
 	// map_border
 	{
-		startPos: Vec2i
-		endPos: Vec2i
-		startPos = Vec2i{-state.map_size.x / 2, state.map_size.y / 2}
-		endPos = Vec2i{-state.map_size.x / 2, -state.map_size.y / 2}
-		draw_line_vec(startPos, endPos, rl.WHITE)
+		startPos: Vec2
+		endPos: Vec2
+		startPos = Vec2{-state.map_size.x / 2, state.map_size.y / 2}
+		endPos = Vec2{-state.map_size.x / 2, -state.map_size.y / 2}
+		draw_line(startPos, endPos, rl.WHITE)
 
-		startPos = Vec2i{-state.map_size.x / 2, state.map_size.y / 2}
-		endPos = Vec2i{state.map_size.x / 2, state.map_size.y / 2}
-		draw_line_vec(startPos, endPos, rl.WHITE)
+		startPos = Vec2{-state.map_size.x / 2, state.map_size.y / 2}
+		endPos = Vec2{state.map_size.x / 2, state.map_size.y / 2}
+		draw_line(startPos, endPos, rl.WHITE)
 
-		startPos = Vec2i{state.map_size.x / 2, state.map_size.y / 2}
-		endPos = Vec2i{state.map_size.x / 2, -state.map_size.y / 2}
-		draw_line_vec(startPos, endPos, rl.WHITE)
+		startPos = Vec2{state.map_size.x / 2, state.map_size.y / 2}
+		endPos = Vec2{state.map_size.x / 2, -state.map_size.y / 2}
+		draw_line(startPos, endPos, rl.WHITE)
 
-		startPos = Vec2i{-state.map_size.x / 2, -state.map_size.y / 2}
-		endPos = Vec2i{state.map_size.x / 2, -state.map_size.y / 2}
-		draw_line_vec(startPos, endPos, rl.WHITE)
+		startPos = Vec2{-state.map_size.x / 2, -state.map_size.y / 2}
+		endPos = Vec2{state.map_size.x / 2, -state.map_size.y / 2}
+		draw_line(startPos, endPos, rl.WHITE)
 	}
 
 	rl.EndMode2D()
@@ -137,23 +115,23 @@ render_playing :: proc() {
 		hud.text_size = 20
 		hud.margin = 2
 		frame_time_text := fmt.ctprintf("frame_time: %.1fms", rl.GetFrameTime() * 1000)
-		rl.DrawText(frame_time_text, hud.x_offset, hud.y_offset, hud.text_size, rl.SKYBLUE)
-		hud.y_offset += hud.text_size + hud.margin
+		rl.DrawText(frame_time_text, hud.offset.x, hud.offset.y, hud.text_size, rl.SKYBLUE)
+		hud.offset.y += hud.text_size + hud.margin
 
 		num_bullets_text := fmt.ctprintf("num_bullets: %d", len(state.entities))
-		rl.DrawText(num_bullets_text, hud.x_offset, hud.y_offset, hud.text_size, rl.SKYBLUE)
-		hud.y_offset += hud.text_size + hud.margin
+		rl.DrawText(num_bullets_text, hud.offset.x, hud.offset.y, hud.text_size, rl.SKYBLUE)
+		hud.offset.y += hud.text_size + hud.margin
 
 		num_walls_text := fmt.ctprintf("num_walls: %d", len(state.walls))
-		rl.DrawText(num_walls_text, hud.x_offset, hud.y_offset, hud.text_size, rl.SKYBLUE)
-		hud.y_offset += hud.text_size + hud.margin
+		rl.DrawText(num_walls_text, hud.offset.x, hud.offset.y, hud.text_size, rl.SKYBLUE)
+		hud.offset.y += hud.text_size + hud.margin
 
 		fps_text := fmt.ctprintf("fps: %d", rl.GetFPS())
-		rl.DrawText(fps_text, hud.x_offset, hud.y_offset, hud.text_size, rl.SKYBLUE)
-		hud.y_offset += hud.text_size + hud.margin
+		rl.DrawText(fps_text, hud.offset.x, hud.offset.y, hud.text_size, rl.SKYBLUE)
+		hud.offset.y += hud.text_size + hud.margin
 
 		time_survived_text := fmt.ctprintf("time_survived: %.2fs", state.time_survived)
-		rl.DrawText(time_survived_text, hud.x_offset, hud.y_offset, hud.text_size, rl.SKYBLUE)
+		rl.DrawText(time_survived_text, hud.offset.x, hud.offset.y, hud.text_size, rl.SKYBLUE)
 	}
 	draw_dropdown()
 	rl.EndDrawing()

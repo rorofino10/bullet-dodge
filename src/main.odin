@@ -4,7 +4,7 @@ package main
 import "core:fmt"
 import "core:mem"
 import rl "vendor:raylib"
-screen_size := rl.Vector2{1000, 1000}
+screen_size := Vec2{1000, 1000}
 
 
 main :: proc() {
